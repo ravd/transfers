@@ -13,7 +13,7 @@ mvn clean verify
 mvn failsafe:integration-test
 ```
 ### There are 2 integration tests.
-   `HttpAppIntegrationTest.performBasicCalls` demonstrates the api (I added explainations in logs). 
+   `HttpAppIntegrationTest.performBasicCalls` demonstrates the API (I added explanations in logs). 
 
    `HttpAppIntegrationTest.performCheckThatThereAreNoAnomaliesRelatedToMutiThreading` checks transfer processing engine, it is long running ~1 minute.
 
@@ -34,3 +34,10 @@ java -jar target/transactions-1.0.jar
    swagger.yaml URL `https://raw.githubusercontent.com/ravd/transfers/master/doc/swagger.yaml`
    
    Swagger UI: https://petstore.swagger.io/
+   
+   Screenshot below shows how to do this:
+   
+   ![Alt text](doc/helpful_screen.png?raw=true)
+   
+## Other
+   I tested the application on Ubuntu 18.04 and OpenJDK 1.8.0_191 using Maven 3.5.2
