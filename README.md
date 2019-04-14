@@ -15,7 +15,7 @@ mvn failsafe:integration-test
 ### There are 2 integration tests.
    `HttpAppIntegrationTest.performBasicCalls` demonstrates the API (I added explanations in logs). 
 
-   `HttpAppIntegrationTest.performCheckThatThereAreNoAnomaliesRelatedToMutiThreading` checks transfer processing engine, it is long running ~1 minute.
+   `HttpAppIntegrationTest.checkThatThereAreNoAnomaliesRelatedToMutiThreading` checks transfer processing engine, it is long running (~1 minute).
 
    Integration tests start http server on port `8889` (it can be changed via `HttpAppIntegrationTest::HTTP_PORT`).
   
