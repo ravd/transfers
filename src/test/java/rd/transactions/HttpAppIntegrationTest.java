@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -193,7 +194,6 @@ public class HttpAppIntegrationTest {
         logger.info(">>> ===========================================================================================");
     }
 
-    @Test
     /**
      * This test checks if account balances calculated on server-side (multi-threaded)
      *  are the same with the ones calculated in test (single-thread)
@@ -201,11 +201,13 @@ public class HttpAppIntegrationTest {
      * It creates accounts, and then performs multiple thousands transactions.
      *  The test keeps track of source and destination accounts to calculate expected balances.
      *
-     * Initial Value is much larger than number of transactions (amount = 1.0)
+     * Initial Value is much larger than number of transactions (transfer amount = 1.0)
      *  because if there are rejections due to low amount of credit, there is unpredictability.
      *  In such case for two "simultaneous" transactions, we don't know which transaction wins the race.
      */
-    public void performCheckThatThereAreNoAnomaliesRelatedToMutiThreading() throws UnirestException, JSONException {
+    @Test
+    public void checkThatThereAreNoAnomaliesRelatedToMutiThreading() throws UnirestException, JSONException {
+
 
         final int TIMEOUT_FOR_TRANSACTION_COMPLETION_SEC = 240;
         final int NUM_ACCOUNTS = 50;
@@ -247,9 +249,11 @@ public class HttpAppIntegrationTest {
 
         logger.info(">>> Submitted transactions.");
 
+        logger.info(">>> Transfer processing StartTime = {}", LocalDateTime.now());
+
         // wait for all transactions to finish
         await().atMost(TIMEOUT_FOR_TRANSACTION_COMPLETION_SEC, SECONDS)
-                .pollInterval(5, SECONDS)
+                .pollInterval(3, SECONDS)
                 .until(() -> {
             HttpResponse<JsonNode> allTransfers = Unirest.get(TRANSFERS).asJson();
             JSONArray transfers = allTransfers.getBody().getArray();
@@ -262,6 +266,7 @@ public class HttpAppIntegrationTest {
             }
             return true;
         });
+        logger.info(">>> Transfer Processing EndTime = {}", LocalDateTime.now());
 
         logger.info(">>> All transactions completed.");
 

@@ -38,6 +38,19 @@ java -jar target/transactions-1.0.jar
    Screenshot below shows how to do this:
    
    ![Alt text](doc/helpful_screen.png?raw=true)
+
+## Additional Information Regarding Requirements and Implementation
+1. Accounts can be created with any currency (ISO 4217).
+2. Transfers can be made only between accounts in same currency, also transfer currency has to be the same as source account currency.
+3. If account balance after transfer is less than 0, the transfer is rejected.
+4. Money amount is rounded HALF_EVEN to maximum precision supported by given currency.
+5. There are endpoints returning all accounts and all transactions in the system, but they are for debug purposes only.
+Normally such endpoints would not be necessary.
+6. Transfer submission api is asynchronous and transfer processing is multi-threaded.
+It may seem too much since account logs are in-memory and transfer happens instantaneously.
+But in real world condition when transfer involves contacting multiple network services and making DB transactions this approach is better IMO.
+
+Additional details regarding API and implementation are available in API Spec, Integration Tests and comments in the code.
    
 ## Other
    I tested the application on Ubuntu 18.04 and OpenJDK 1.8.0_191 using Maven 3.5.2
