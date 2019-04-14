@@ -31,6 +31,6 @@ java -jar target/transactions-1.0.jar
    
    You can browse the API spec in more human friendly way by copying swagger.yaml URL into sample Swagger UI.
    
-   swagger.yaml URL `http://`
+   swagger.yaml URL `https://raw.githubusercontent.com/ravd/transfers/master/doc/swagger.yaml`
    
    Swagger UI: https://petstore.swagger.io/
