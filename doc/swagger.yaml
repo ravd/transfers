@@ -1,0 +1,272 @@
+swagger: "2.0"
+info:
+  description: |
+    This is transfers server enabling the user to create accounts and perform transfers between accounts. Account can be created in any currency but transfers are restricted to one currency only. This means you can transfer EUR from account A in EUR to account B in EUR, but not USD to account in EUR.
+    API for adding accounts is synchronous. API for transfers is asynchronous, transfer is submitted to the system and processed in background. Transfer status can be read by polling transfers endpoint.
+  version: "1.0.0"
+  title: "Transfers Server"
+  contact:
+    email: "r.dziadek@gmail.com"
+host: "localhost:8888"
+basePath: "/v1"
+tags:
+- name: "account"
+  description: "Account creation and monitoring"
+- name: "transfer"
+  description: "Transfer submission and monitoring"
+schemes:
+- "http"
+paths:
+  /accounts:
+    post:
+      tags:
+      - "account"
+      summary: "Add a new account to the system"
+      operationId: "addAccount"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Account to be added to the system."
+        required: true
+        schema:
+          $ref: "#/definitions/Account"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Account"
+        400:
+          description: "Malformed input, this includes invalid currency code"
+          schema:
+            $ref: "#/definitions/Error"
+        409:
+          description: "There exists account with same accountId"
+          schema:
+            $ref: "#/definitions/Error"
+        422:
+          description: "amount is invalid"
+          schema:
+            $ref: "#/definitions/Error"
+    get:
+      tags:
+      - "account"
+      summary: "Returns list of all accounts"
+      operationId: "getAllAccounts"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Account"
+
+  /accounts/{accountId}:
+    get:
+      tags:
+      - "account"
+      summary: "Find account by accountId"
+      operationId: "getAccountById"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "accountId"
+        in: "path"
+        description: "accountId of account to be returned"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Account"
+        404:
+          description: "Account not found"
+          schema:
+            $ref: "#/definitions/Error"
+
+  /transfers:
+    post:
+      tags:
+      - "transfer"
+      summary: "Submit transfer request"
+      operationId: "submitTransfer"
+      consumes: 
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Transfer request"
+        required: true
+        schema:
+          $ref: "#/definitions/Transfer"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Transfer"
+        400:
+          description: "Malformed input"
+          schema:
+            $ref: "#/definitions/Error"
+        422:
+          description: "Invalid amount"
+          schema:
+            $ref: "#/definitions/Error"
+    get:
+      tags:
+      - "transfer"
+      summary: "Return list of all transfers"
+      operationId: "getAllTransfers"
+      produces:
+      - "application/json"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/Transfer"
+              
+  /transfers/{transferId}:
+    get:
+      tags:
+      - "transfer"
+      summary: "Find transfer by transferId"
+      description: "Returns a single transfer"
+      operationId: "getTransferById"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "transferId"
+        in: "path"
+        description: "transferId of transfer to return"
+        required: true
+        type: "string"
+        format: "uuid"
+      responses:
+        200:
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Transfer"
+        404:
+          description: "Transfer with this transferId does not exist"
+          schema:
+            $ref: "#/definitions/Error"
+  
+definitions:
+  Account:
+    type: "object"
+    properties:
+      accountId:
+        type: "string"
+        description: "This is identifier generated elswhere, it is being used as-is to identify accounts."
+      currency:
+        type: "string"
+        format: "alphabetic code from ISO 4217"
+        description: "This is currency in which the account is operated."
+      amount:
+        type: "string"
+        format: "decimal"
+        description: | 
+            This is amount of money on the account. Money is always rounded HALF_EVEN before any processing starts.
+            You will notice it in response.
+            0.003 USD = 0.00 USD
+            0.005 USD = 0.005 USD
+            0.015 USD = 0.02 USD
+            0.025 USD = 0.02 USD
+        minimum: 0.00
+    example:
+      accountId: "MojeTestoweKonto"
+      currency: "PLN"
+      amount: "120.44"
+    required:
+      - accountId
+      - currency
+      - amount
+  Transfer:
+    type: "object"
+    properties:
+      sourceAccountId:
+        type: "string"
+        description: "accountId of the account FROM which the money is being transferred."
+        example: "MojeTestoweKonto"
+      targetAccountId:
+        type: "string"
+        description: "accountId of the account TO which the money is being transferred."
+        example: "CzyjesTestoweKonto"
+      currency:
+        type: "string"
+        format: "alphabetic code from ISO 4217"
+        description: "This is currency of the transfer."
+        example: "PLN"
+      amount:
+        type: "string"
+        format: "decimal"
+        description: | 
+            This is amount of money on the account. Money is always rounded HALF_EVEN before any processing starts.
+            You will notice it in response.
+            0.003 USD = 0.00 USD
+            0.005 USD = 0.005 USD
+            0.015 USD = 0.02 USD
+            0.025 USD = 0.02 USD
+        example: "50.40"
+        minimum: 0.00
+        exclusiveMinimum: true
+      transferId:
+        type: "string"
+        format: "uuid"
+        description: "This id is assigned during transfer submission and identifies the transfer in the system."
+        readOnly: true
+        example: "14c60641-9717-4f56-a3b5-42704e43838f"
+      transferStatus:
+        type: "string"
+        description: | 
+            Transfer status
+            SUBMITTED - transfer created in system.
+            PROCESSING - the transfer is being processed by the worker. In this state you may see transfer amount charged on source account but not yet added to target account.
+            COMPLETED - transfer was performed, and accounts' balances will reflect this.
+            REJECTED_ONE_OF_ACCOUNTS_DOES_NOT_EXIST - transfer rejected. Source and/or target account do not exist.
+            REJECTED_NOT_ENOUGH_CREDIT_ON_SOURCE_ACCOUNT - transfer rejected. Amount of money on source account is lower then requested transfer amount.
+            REJECTED_DIFFERENT_CURRENCIES - transfer rejected. Source and Target account are operated in different currencies.
+            REJECTED_UNSUPPORTED_TRANSFER_CURRENCY - transfer rejected. Source account is operated in different currency than transfer request.
+            INTERNAL_ERROR - transfer rejected due to internal error in the system. Contact the administrator.
+        enum:
+          - SUBMITTED
+          - PROCESSING
+          - COMPLETED
+          - REJECTED_ONE_OF_ACCOUNTS_DOES_NOT_EXIST
+          - REJECTED_NOT_ENOUGH_CREDIT_ON_SOURCE_ACCOUNT
+          - REJECTED_DIFFERENT_CURRENCIES
+          - REJECTED_UNSUPPORTED_TRANSFER_CURRENCY
+          - INTERNAL_ERROR
+        readOnly: true
+        example: "SUBMITTED"
+    required:
+      - sourceAccountId
+      - targetAccountId
+      - currency
+      - amount
+  Error:
+    type: "object"
+    properties:
+      errorCode:
+        type: "integer"
+        description: "Error code, same as response http status."
+      message:
+        type: "string"
+        description: "General explanation of the error."
+    example:
+      errorCode: 999
+      message: "Something went wrong."
+      
+externalDocs:
+  description: "Find out more on github \"https://github.com/ravd/transfers\""
+  url: "https://github.com/ravd/transfers"
